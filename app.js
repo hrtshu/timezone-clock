@@ -69,6 +69,9 @@ const secondaryTimeEl = document.getElementById("secondary-time");
 const secondaryTimezoneEl = document.getElementById("secondary-timezone");
 const labelEl = document.getElementById("timezone-label");
 const countdownEl = document.getElementById("countdown");
+const countdownDurationEl = document.getElementById("countdown-duration");
+const countdownLeftEl = document.getElementById("countdown-left");
+const countdownTargetEl = document.getElementById("countdown-target");
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
   timeZone: timezone,
@@ -128,7 +131,9 @@ function updateClock() {
     const remainingMilliseconds = targetDate.getTime() - now.getTime();
     countdownEl.style.display = "block";
     countdownEl.classList.toggle("is-expired", remainingMilliseconds < 0);
-    countdownEl.textContent = `${formatDuration(remainingMilliseconds)} left until ${formatTargetDate(now, targetDate)}`;
+    countdownDurationEl.textContent = formatDuration(remainingMilliseconds);
+    countdownLeftEl.textContent = "left";
+    countdownTargetEl.textContent = `until ${formatTargetDate(now, targetDate)}`;
   }
 }
 
