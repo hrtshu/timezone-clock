@@ -8,7 +8,9 @@
 </head>
 <body>
   <main class="clock-container">
-    <p id="timezone-label" class="timezone-label"></p>
+    <p id="timezone-label" class="timezone-label">
+      <span id="date-label" class="date-label"></span> <span id="timezone-name" class="timezone-name"></span>
+    </p>
     <time id="clock" datetime="" aria-live="polite"></time>
     <time id="secondary-clock" class="secondary-clock" datetime="" aria-live="polite">
       <span id="secondary-time"></span> <span id="secondary-timezone" class="secondary-timezone"></span>
