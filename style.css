@@ -35,9 +35,32 @@ body {
   font-size: clamp(4rem, 25vw, 25rem);
 }
 
+.secondary-clock,
+.countdown {
+  display: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.secondary-clock {
+  margin-top: 0.5rem;
+  color: #b8c4c8;
+  font-size: clamp(1.25rem, 5vw, 3rem);
+  font-weight: 300;
+}
+
 .timezone-label {
   margin-top: 1rem;
   font-size: clamp(0.875rem, 2.5vw, 1.25rem);
   color: #888;
   font-weight: 400;
+}
+
+.countdown {
+  margin-top: 1.5rem;
+  color: #f5f5f5;
+  font-size: clamp(1rem, 3vw, 1.5rem);
+}
+
+.countdown.is-expired {
+  color: #d2a85a;
 }
