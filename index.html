@@ -8,9 +8,11 @@
 </head>
 <body>
   <main class="clock-container">
-    <time id="clock" datetime="" aria-live="polite"></time>
-    <time id="secondary-clock" class="secondary-clock" datetime="" aria-live="polite"></time>
     <p id="timezone-label" class="timezone-label"></p>
+    <time id="clock" datetime="" aria-live="polite"></time>
+    <time id="secondary-clock" class="secondary-clock" datetime="" aria-live="polite">
+      <span id="secondary-time"></span> <span id="secondary-timezone" class="secondary-timezone"></span>
+    </time>
     <p id="countdown" class="countdown" aria-live="polite"></p>
   </main>
   <script src="app.js"></script>

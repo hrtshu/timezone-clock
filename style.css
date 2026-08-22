@@ -48,8 +48,13 @@ body {
   font-weight: 300;
 }
 
+.secondary-timezone {
+  font-size: 0.4em;
+  vertical-align: middle;
+}
+
 .timezone-label {
-  margin-top: 1rem;
+  margin-bottom: 1rem;
   font-size: clamp(0.875rem, 2.5vw, 1.25rem);
   color: #888;
   font-weight: 400;

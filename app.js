@@ -65,6 +65,8 @@ const secondaryTimezone =
 const targetDate = untilParam ? new Date(untilParam) : null;
 const clockEl = document.getElementById("clock");
 const secondaryClockEl = document.getElementById("secondary-clock");
+const secondaryTimeEl = document.getElementById("secondary-time");
+const secondaryTimezoneEl = document.getElementById("secondary-timezone");
 const labelEl = document.getElementById("timezone-label");
 const countdownEl = document.getElementById("countdown");
 
@@ -113,11 +115,12 @@ function updateClock() {
 
   clockEl.textContent = time;
   clockEl.setAttribute("datetime", now.toISOString());
-  labelEl.textContent = `${date} · ${timezone}`;
+  labelEl.textContent = `${date} ${timezone}`;
 
   if (secondaryTimeFormatter) {
     secondaryClockEl.style.display = "block";
-    secondaryClockEl.textContent = `${secondaryTimeFormatter.format(now)} · ${secondaryTimezone}`;
+    secondaryTimeEl.textContent = secondaryTimeFormatter.format(now);
+    secondaryTimezoneEl.textContent = secondaryTimezone;
     secondaryClockEl.setAttribute("datetime", now.toISOString());
   }
 
