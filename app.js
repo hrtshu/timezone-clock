@@ -40,10 +40,21 @@ function formatDuration(milliseconds) {
 function formatTargetDate(now, target) {
   const nowDate = targetDateKeyFormatter.format(now);
   const targetDateKey = targetDateKeyFormatter.format(target);
-  const formatter =
-    nowDate === targetDateKey ? targetTimeFormatter : targetDateTimeFormatter;
 
-  return formatter.format(target);
+  return nowDate === targetDateKey
+    ? targetTimeFormatter.format(target)
+    : `${formatDate(target)} ${targetTimeFormatter.format(target)}`;
+}
+
+function formatDate(date) {
+  const parts = dateFormatter.formatToParts(date);
+  const values = Object.fromEntries(
+    parts
+      .filter(({ type }) => type !== "literal")
+      .map(({ type, value }) => [type, value]),
+  );
+
+  return `${values.year}.${values.month}.${values.day} (${values.weekday})`;
 }
 
 const timezone = resolveTimezone();
@@ -64,10 +75,10 @@ const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
   hour12: false,
 });
 
-const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: timezone,
   year: "numeric",
-  month: "long",
+  month: "numeric",
   day: "numeric",
   weekday: "short",
 });
@@ -86,16 +97,6 @@ const targetTimeFormatter = new Intl.DateTimeFormat("en-US", {
   hour12: false,
 });
 
-const targetDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
-  timeZone: timezone,
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-
 const secondaryTimeFormatter = secondaryTimezone
   ? new Intl.DateTimeFormat("ja-JP", {
       timeZone: secondaryTimezone,
@@ -108,7 +109,7 @@ const secondaryTimeFormatter = secondaryTimezone
 function updateClock() {
   const now = new Date();
   const time = timeFormatter.format(now);
-  const date = dateFormatter.format(now);
+  const date = formatDate(now);
 
   clockEl.textContent = time;
   clockEl.setAttribute("datetime", now.toISOString());
