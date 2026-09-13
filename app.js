@@ -47,14 +47,26 @@ function formatTargetDate(now, target) {
 }
 
 function formatDate(date) {
-  const parts = dateFormatter.formatToParts(date);
+  return formatDateParts(dateFormatter.formatToParts(date), true);
+}
+
+function formatDateParts(parts, includeYear) {
   const values = Object.fromEntries(
     parts
       .filter(({ type }) => type !== "literal")
       .map(({ type, value }) => [type, value]),
   );
 
-  return `${values.year}.${values.month}.${values.day} (${values.weekday})`;
+  const yearText = includeYear ? `${values.year}.` : "";
+  return `${yearText}${values.month}.${values.day} (${values.weekday})`;
+}
+
+function getDateKey(formatter, date) {
+  return formatter
+    .formatToParts(date)
+    .filter(({ type }) => ["year", "month", "day"].includes(type))
+    .map(({ type, value }) => `${type}=${value}`)
+    .join(";");
 }
 
 const timezone = resolveTimezone();
@@ -65,6 +77,7 @@ const secondaryTimezone =
 const targetDate = untilParam ? new Date(untilParam) : null;
 const clockEl = document.getElementById("clock");
 const secondaryClockEl = document.getElementById("secondary-clock");
+const secondaryDateEl = document.getElementById("secondary-date");
 const secondaryTimeEl = document.getElementById("secondary-time");
 const secondaryTimezoneEl = document.getElementById("secondary-timezone");
 const labelEl = document.getElementById("timezone-label");
@@ -113,6 +126,25 @@ const secondaryTimeFormatter = secondaryTimezone
     })
   : null;
 
+const secondaryDateFormatter = secondaryTimezone
+  ? new Intl.DateTimeFormat("en-US", {
+      timeZone: secondaryTimezone,
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      weekday: "short",
+    })
+  : null;
+
+const secondaryDateKeyFormatter = secondaryTimezone
+  ? new Intl.DateTimeFormat("en-US", {
+      timeZone: secondaryTimezone,
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    })
+  : null;
+
 function updateClock() {
   const now = new Date();
   const time = timeFormatter.format(now);
@@ -125,6 +157,24 @@ function updateClock() {
 
   if (secondaryTimeFormatter) {
     secondaryClockEl.style.display = "block";
+    const secondaryDateKey = getDateKey(secondaryDateKeyFormatter, now);
+    const primaryDateKey = getDateKey(targetDateKeyFormatter, now);
+    const secondaryParts = secondaryDateFormatter.formatToParts(now);
+    const secondaryYear = secondaryParts.find(
+      ({ type }) => type === "year",
+    ).value;
+    const primaryParts = dateFormatter.formatToParts(now);
+    const primaryYear = primaryParts.find(({ type }) => type === "year").value;
+
+    if (secondaryDateKey === primaryDateKey) {
+      secondaryDateEl.style.display = "none";
+    } else {
+      secondaryDateEl.style.display = "inline";
+      secondaryDateEl.textContent = formatDateParts(
+        secondaryParts,
+        secondaryYear !== primaryYear,
+      );
+    }
     secondaryTimeEl.textContent = secondaryTimeFormatter.format(now);
     secondaryTimezoneEl.textContent = secondaryTimezone;
     secondaryClockEl.setAttribute("datetime", now.toISOString());
