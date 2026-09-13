@@ -174,12 +174,20 @@ function formatDuration(milliseconds) {
 }
 
 function formatTargetDate(now, target) {
-  const nowDate = targetDateKeyFormatter.format(now);
-  const targetDateKey = targetDateKeyFormatter.format(target);
+  const nowParts = targetDateKeyFormatter.formatToParts(now);
+  const targetParts = targetDateKeyFormatter.formatToParts(target);
+  const getValue = (parts, type) =>
+    parts.find((part) => part.type === type).value;
+  const sameYear = getValue(nowParts, "year") === getValue(targetParts, "year");
+  const sameMonth =
+    getValue(nowParts, "month") === getValue(targetParts, "month");
+  const sameDay = getValue(nowParts, "day") === getValue(targetParts, "day");
 
-  return nowDate === targetDateKey
-    ? targetTimeFormatter.format(target)
-    : `${formatDate(target)} ${targetTimeFormatter.format(target)}`;
+  if (sameYear && sameMonth && sameDay) {
+    return targetTimeFormatter.format(target);
+  }
+
+  return `${formatDateParts(dateFormatter.formatToParts(target), !sameYear)} ${targetTimeFormatter.format(target)}`;
 }
 
 function formatDate(date) {
