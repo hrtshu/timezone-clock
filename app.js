@@ -300,7 +300,7 @@ function updateClock() {
   timezoneNameEl.textContent = timezone;
 
   if (secondaryTimeFormatter) {
-    secondaryClockEl.style.display = "block";
+    secondaryClockEl.style.display = "flex";
     const secondaryDateKey = getDateKey(secondaryDateKeyFormatter, now);
     const primaryDateKey = getDateKey(targetDateKeyFormatter, now);
     const secondaryParts = secondaryDateFormatter.formatToParts(now);
@@ -326,7 +326,7 @@ function updateClock() {
 
   if (targetDate && !Number.isNaN(targetDate.getTime())) {
     const remainingMilliseconds = targetDate.getTime() - now.getTime();
-    countdownEl.style.display = "block";
+    countdownEl.style.display = "flex";
     countdownEl.classList.toggle("is-expired", remainingMilliseconds < 0);
     countdownDurationEl.textContent = formatDuration(remainingMilliseconds);
     countdownLeftEl.textContent = "left";
