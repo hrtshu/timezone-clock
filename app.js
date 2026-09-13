@@ -25,6 +25,142 @@ function isValidTimezone(value) {
   }
 }
 
+function getZonedDateParts(date, timeZone) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hourCycle: "h23",
+  }).formatToParts(date);
+
+  return Object.fromEntries(
+    parts
+      .filter(({ type }) => type !== "literal")
+      .map(({ type, value }) => [type, Number(value)]),
+  );
+}
+
+function getDateInTimezone(date, timeZone) {
+  const parts = getZonedDateParts(date, timeZone);
+  return {
+    year: parts.year,
+    month: parts.month,
+    day: parts.day,
+  };
+}
+
+function createDateInTimezone(values, timeZone) {
+  let result = new Date(
+    Date.UTC(
+      values.year,
+      values.month - 1,
+      values.day,
+      values.hour,
+      values.minute,
+      values.second,
+    ),
+  );
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const actual = getZonedDateParts(result, timeZone);
+    const desiredUtc = Date.UTC(
+      values.year,
+      values.month - 1,
+      values.day,
+      values.hour,
+      values.minute,
+      values.second,
+    );
+    const actualUtc = Date.UTC(
+      actual.year,
+      actual.month - 1,
+      actual.day,
+      actual.hour,
+      actual.minute,
+      actual.second,
+    );
+    result = new Date(result.getTime() + desiredUtc - actualUtc);
+  }
+
+  return result;
+}
+
+function parseUntil(value, timeZone) {
+  if (!value) {
+    return null;
+  }
+
+  const input = value.trim();
+  const explicitOffset = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(input);
+  if (explicitOffset) {
+    const parsed = new Date(input);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  let text = input;
+  let targetTimezone = timeZone;
+  const timezoneMatch = text.match(
+    /(?:\s+|\[)([A-Za-z]+\/[A-Za-z_]+(?:\/[A-Za-z_]+)?)\]?$/,
+  );
+  if (timezoneMatch && isValidTimezone(timezoneMatch[1])) {
+    targetTimezone = timezoneMatch[1];
+    text = text.slice(0, timezoneMatch.index).trim();
+  }
+
+  text = text
+    .replace(/年/g, "-")
+    .replace(/月/g, "-")
+    .replace(/日/g, "")
+    .replace(/時/g, ":")
+    .replace(/分/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const dateTimeMatch = text.match(
+    /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:[T\s]+(\d{1,2})(?::(\d{2}))?(?::(\d{2}))?)?$/,
+  );
+  const timeOnlyMatch = text.match(/^(\d{1,2})(?::(\d{2}))?(?::(\d{2}))?$/);
+  const now = new Date();
+  let values;
+
+  if (dateTimeMatch) {
+    values = {
+      year: Number(dateTimeMatch[1]),
+      month: Number(dateTimeMatch[2]),
+      day: Number(dateTimeMatch[3]),
+      hour: Number(dateTimeMatch[4] || 0),
+      minute: Number(dateTimeMatch[5] || 0),
+      second: Number(dateTimeMatch[6] || 0),
+    };
+  } else if (timeOnlyMatch) {
+    values = {
+      ...getDateInTimezone(now, targetTimezone),
+      hour: Number(timeOnlyMatch[1]),
+      minute: Number(timeOnlyMatch[2] || 0),
+      second: Number(timeOnlyMatch[3] || 0),
+    };
+  } else {
+    return null;
+  }
+
+  const parsed = createDateInTimezone(values, targetTimezone);
+  if (timeOnlyMatch && parsed <= now) {
+    const nextDay = new Date(
+      Date.UTC(values.year, values.month - 1, values.day + 1),
+    );
+    values.year = nextDay.getUTCFullYear();
+    values.month = nextDay.getUTCMonth() + 1;
+    values.day = nextDay.getUTCDate();
+    return createDateInTimezone(values, targetTimezone);
+  }
+
+  return parsed;
+}
+
 function formatDuration(milliseconds) {
   const sign = milliseconds < 0 ? "-" : "";
   let minutes = Math.floor(Math.abs(milliseconds) / 60000);
@@ -74,7 +210,7 @@ const secondaryTimezone =
   secondaryTzParam && isValidTimezone(secondaryTzParam)
     ? secondaryTzParam
     : null;
-const targetDate = untilParam ? new Date(untilParam) : null;
+const targetDate = parseUntil(untilParam, timezone);
 const clockEl = document.getElementById("clock");
 const secondaryClockEl = document.getElementById("secondary-clock");
 const secondaryDateEl = document.getElementById("secondary-date");
