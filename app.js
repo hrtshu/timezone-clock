@@ -2,6 +2,7 @@ const params = new URLSearchParams(window.location.search);
 const tzParam = params.get("tz") || params.get("timezone");
 const secondaryTzParam = params.get("subtz") || params.get("subtimezone");
 const untilParam = params.get("until");
+const eventNameParam = params.get("event");
 
 function resolveTimezone() {
   if (!tzParam) {
@@ -330,7 +331,10 @@ function updateClock() {
     countdownEl.classList.toggle("is-expired", remainingMilliseconds < 0);
     countdownDurationEl.textContent = formatDuration(remainingMilliseconds);
     countdownLeftEl.textContent = "left";
-    countdownTargetEl.textContent = `until ${formatTargetDate(now, targetDate)}`;
+    const targetLabel = formatTargetDate(now, targetDate);
+    countdownTargetEl.textContent = eventNameParam
+      ? `until ${eventNameParam} (${targetLabel})`
+      : `until ${targetLabel}`;
   }
 }
 
