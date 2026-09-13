@@ -77,6 +77,18 @@ body {
   font-size: clamp(1.5rem, 6vw, 4rem);
 }
 
+.countdown-icon {
+  width: 0.55em;
+  height: 0.55em;
+  margin-right: 0.18em;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+  vertical-align: -0.02em;
+}
+
 .countdown-target {
   font-size: 0.4em;
   vertical-align: baseline;
