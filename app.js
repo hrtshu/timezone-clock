@@ -4,8 +4,7 @@ const secondaryTzParam = params.get("subtz") || params.get("subtimezone");
 const untilParam = params.get("until");
 const eventNameParam = params.get("event");
 const weatherParam = params.get("weather");
-const latParam = params.get("lat");
-const lonParam = params.get("lon");
+const weatherLocationParam = params.get("wloc");
 const locationNameParam = params.get("loc");
 
 function resolveTimezone() {
@@ -350,51 +349,106 @@ updateClock();
 setInterval(updateClock, 1000);
 
 // 天気表示: Open-Meteo（APIキー不要・CORS対応）から現在気温と天気を取得する。
-// 取得地点は lat/lon パラメータ優先、なければ表示タイムゾーンの代表都市、
-// それもなければ東京。geolocation は使わない（キャスト先で許可ダイアログが
-// 出ると時計表示の邪魔になるため）。
-const TIMEZONE_LOCATIONS = {
-  "Asia/Tokyo": { lat: 35.6812, lon: 139.7671, name: "東京" },
-  "Asia/Seoul": { lat: 37.5665, lon: 126.978, name: "ソウル" },
-  "Asia/Shanghai": { lat: 31.2304, lon: 121.4737, name: "上海" },
-  "Asia/Hong_Kong": { lat: 22.3193, lon: 114.1694, name: "香港" },
-  "Asia/Taipei": { lat: 25.033, lon: 121.5654, name: "台北" },
-  "Asia/Singapore": { lat: 1.3521, lon: 103.8198, name: "シンガポール" },
-  "Asia/Bangkok": { lat: 13.7563, lon: 100.5018, name: "バンコク" },
-  "Asia/Kolkata": { lat: 22.5726, lon: 88.3639, name: "コルカタ" },
-  "Asia/Dubai": { lat: 25.2048, lon: 55.2708, name: "ドバイ" },
-  "Europe/London": { lat: 51.5074, lon: -0.1278, name: "ロンドン" },
-  "Europe/Paris": { lat: 48.8566, lon: 2.3522, name: "パリ" },
-  "Europe/Berlin": { lat: 52.52, lon: 13.405, name: "ベルリン" },
-  "Europe/Moscow": { lat: 55.7558, lon: 37.6173, name: "モスクワ" },
-  "America/New_York": { lat: 40.7128, lon: -74.006, name: "ニューヨーク" },
-  "America/Chicago": { lat: 41.8781, lon: -87.6298, name: "シカゴ" },
-  "America/Denver": { lat: 39.7392, lon: -104.9903, name: "デンバー" },
-  "America/Los_Angeles": { lat: 34.0522, lon: -118.2437, name: "ロサンゼルス" },
-  "America/Toronto": { lat: 43.6532, lon: -79.3832, name: "トロント" },
-  "America/Sao_Paulo": { lat: -23.5505, lon: -46.6333, name: "サンパウロ" },
-  "Australia/Sydney": { lat: -33.8688, lon: 151.2093, name: "シドニー" },
-  "Pacific/Auckland": { lat: -36.8485, lon: 174.7633, name: "オークランド" },
+// 取得地点は天気専用の wloc パラメータで指定し、タイムゾーンとは連動しない。
+// 未指定・不正な指定の場合は東京。geolocation は使わない（キャスト先で
+// 許可ダイアログが出ると時計表示の邪魔になるため）。
+const WEATHER_LOCATION_PRESETS = {
+  tokyo: { lat: 35.6812, lon: 139.7671, name: "東京" },
+  osaka: { lat: 34.6937, lon: 135.5023, name: "大阪" },
+  nagoya: { lat: 35.1815, lon: 136.9066, name: "名古屋" },
+  kyoto: { lat: 35.0116, lon: 135.7681, name: "京都" },
+  sapporo: { lat: 43.0618, lon: 141.3545, name: "札幌" },
+  sendai: { lat: 38.2682, lon: 140.8694, name: "仙台" },
+  hiroshima: { lat: 34.3853, lon: 132.4553, name: "広島" },
+  fukuoka: { lat: 33.5904, lon: 130.4017, name: "福岡" },
+  naha: { lat: 26.2124, lon: 127.6809, name: "那覇" },
+  seoul: { lat: 37.5665, lon: 126.978, name: "ソウル" },
+  shanghai: { lat: 31.2304, lon: 121.4737, name: "上海" },
+  hongkong: { lat: 22.3193, lon: 114.1694, name: "香港" },
+  taipei: { lat: 25.033, lon: 121.5654, name: "台北" },
+  singapore: { lat: 1.3521, lon: 103.8198, name: "シンガポール" },
+  bangkok: { lat: 13.7563, lon: 100.5018, name: "バンコク" },
+  kolkata: { lat: 22.5726, lon: 88.3639, name: "コルカタ" },
+  dubai: { lat: 25.2048, lon: 55.2708, name: "ドバイ" },
+  london: { lat: 51.5074, lon: -0.1278, name: "ロンドン" },
+  paris: { lat: 48.8566, lon: 2.3522, name: "パリ" },
+  berlin: { lat: 52.52, lon: 13.405, name: "ベルリン" },
+  moscow: { lat: 55.7558, lon: 37.6173, name: "モスクワ" },
+  newyork: { lat: 40.7128, lon: -74.006, name: "ニューヨーク" },
+  chicago: { lat: 41.8781, lon: -87.6298, name: "シカゴ" },
+  denver: { lat: 39.7392, lon: -104.9903, name: "デンバー" },
+  losangeles: { lat: 34.0522, lon: -118.2437, name: "ロサンゼルス" },
+  toronto: { lat: 43.6532, lon: -79.3832, name: "トロント" },
+  saopaulo: { lat: -23.5505, lon: -46.6333, name: "サンパウロ" },
+  sydney: { lat: -33.8688, lon: 151.2093, name: "シドニー" },
+  auckland: { lat: -36.8485, lon: 174.7633, name: "オークランド" },
 };
-const DEFAULT_WEATHER_LOCATION = TIMEZONE_LOCATIONS["Asia/Tokyo"];
+const DEFAULT_WEATHER_LOCATION = WEATHER_LOCATION_PRESETS.tokyo;
 // 更新間隔はページ読み込み時点が基準（読み込み直後に取得し、以後この間隔で再取得）
 // Open-Meteo の現在値も15分刻みで更新されるため、それに合わせている
 const WEATHER_REFRESH_MS = 15 * 60 * 1000;
 
-function resolveWeatherLocation() {
-  const lat = Number(latParam);
-  const lon = Number(lonParam);
-  if (
-    latParam !== null &&
-    lonParam !== null &&
-    Number.isFinite(lat) &&
-    Number.isFinite(lon) &&
-    Math.abs(lat) <= 90 &&
-    Math.abs(lon) <= 180
-  ) {
-    return { lat, lon, name: locationNameParam || "" };
+// 地点解決は初回だけ行い、以後はキャッシュした座標で天気を取り続ける
+let weatherLocationPromise = null;
+
+function getWeatherLocation() {
+  if (!weatherLocationPromise) {
+    weatherLocationPromise = resolveWeatherLocation();
   }
-  return TIMEZONE_LOCATIONS[timezone] || DEFAULT_WEATHER_LOCATION;
+  return weatherLocationPromise;
+}
+
+async function resolveWeatherLocation() {
+  if (weatherLocationParam) {
+    const key = weatherLocationParam.trim().toLowerCase();
+    const preset = WEATHER_LOCATION_PRESETS[key];
+    if (preset) {
+      return { ...preset, name: locationNameParam || preset.name };
+    }
+    // プリセット名でなければ "緯度,経度" 形式として解釈する
+    const parts = weatherLocationParam.split(",");
+    if (parts.length === 2) {
+      const lat = Number(parts[0]);
+      const lon = Number(parts[1]);
+      if (
+        Number.isFinite(lat) &&
+        Number.isFinite(lon) &&
+        Math.abs(lat) <= 90 &&
+        Math.abs(lon) <= 180
+      ) {
+        return { lat, lon, name: locationNameParam || "" };
+      }
+    }
+    // それでもなければ地名としてジオコーディングAPIで座標に解決する
+    try {
+      const geoUrl =
+        "https://geocoding-api.open-meteo.com/v1/search" +
+        `?name=${encodeURIComponent(weatherLocationParam.trim())}` +
+        "&count=1&language=ja&format=json";
+      const response = await fetch(geoUrl);
+      if (response.ok) {
+        const data = await response.json();
+        const place = data && data.results && data.results[0];
+        if (
+          place &&
+          typeof place.latitude === "number" &&
+          typeof place.longitude === "number"
+        ) {
+          return {
+            lat: place.latitude,
+            lon: place.longitude,
+            name: locationNameParam || place.name || "",
+          };
+        }
+      }
+    } catch {
+      // 解決できなければ東京にフォールバックする
+    }
+  }
+  return {
+    ...DEFAULT_WEATHER_LOCATION,
+    name: locationNameParam || DEFAULT_WEATHER_LOCATION.name,
+  };
 }
 
 // WMO weather code → 天気マークと読み上げ用の天気名
@@ -424,7 +478,7 @@ function weatherIconAndLabel(weatherCode, isDay) {
 }
 
 async function updateWeather() {
-  const { lat, lon, name } = resolveWeatherLocation();
+  const { lat, lon, name } = await getWeatherLocation();
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
