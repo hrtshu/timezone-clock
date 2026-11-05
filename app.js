@@ -377,7 +377,9 @@ const TIMEZONE_LOCATIONS = {
   "Pacific/Auckland": { lat: -36.8485, lon: 174.7633, name: "オークランド" },
 };
 const DEFAULT_WEATHER_LOCATION = TIMEZONE_LOCATIONS["Asia/Tokyo"];
-const WEATHER_REFRESH_MS = 30 * 60 * 1000;
+// 更新間隔はページ読み込み時点が基準（読み込み直後に取得し、以後この間隔で再取得）
+// Open-Meteo の現在値も15分刻みで更新されるため、それに合わせている
+const WEATHER_REFRESH_MS = 15 * 60 * 1000;
 
 function resolveWeatherLocation() {
   const lat = Number(latParam);
