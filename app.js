@@ -510,7 +510,12 @@ async function updateWeather() {
   }
 }
 
-if (weatherParam !== "off" && weatherParam !== "0") {
+// 天気はクエリ文字列がある場合にだけ表示する（素のURLでは時計のみ）
+if (
+  weatherParam !== "off" &&
+  weatherParam !== "0" &&
+  window.location.search !== ""
+) {
   updateWeather();
   setInterval(updateWeather, WEATHER_REFRESH_MS);
 }
