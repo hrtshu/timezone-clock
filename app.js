@@ -3,6 +3,10 @@ const tzParam = params.get("tz") || params.get("timezone");
 const secondaryTzParam = params.get("subtz") || params.get("subtimezone");
 const untilParam = params.get("until");
 const eventNameParam = params.get("event");
+const weatherParam = params.get("weather");
+const latParam = params.get("lat");
+const lonParam = params.get("lon");
+const locationNameParam = params.get("loc");
 
 function resolveTimezone() {
   if (!tzParam) {
@@ -232,6 +236,10 @@ const countdownEl = document.getElementById("countdown");
 const countdownDurationEl = document.getElementById("countdown-duration");
 const countdownLeftEl = document.getElementById("countdown-left");
 const countdownTargetEl = document.getElementById("countdown-target");
+const weatherEl = document.getElementById("weather");
+const weatherIconEl = document.getElementById("weather-icon");
+const weatherTempEl = document.getElementById("weather-temp");
+const weatherLocationEl = document.getElementById("weather-location");
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
   timeZone: timezone,
@@ -340,3 +348,113 @@ function updateClock() {
 
 updateClock();
 setInterval(updateClock, 1000);
+
+// 天気表示: Open-Meteo（APIキー不要・CORS対応）から現在気温と天気を取得する。
+// 取得地点は lat/lon パラメータ優先、なければ表示タイムゾーンの代表都市、
+// それもなければ東京。geolocation は使わない（キャスト先で許可ダイアログが
+// 出ると時計表示の邪魔になるため）。
+const TIMEZONE_LOCATIONS = {
+  "Asia/Tokyo": { lat: 35.6812, lon: 139.7671, name: "東京" },
+  "Asia/Seoul": { lat: 37.5665, lon: 126.978, name: "ソウル" },
+  "Asia/Shanghai": { lat: 31.2304, lon: 121.4737, name: "上海" },
+  "Asia/Hong_Kong": { lat: 22.3193, lon: 114.1694, name: "香港" },
+  "Asia/Taipei": { lat: 25.033, lon: 121.5654, name: "台北" },
+  "Asia/Singapore": { lat: 1.3521, lon: 103.8198, name: "シンガポール" },
+  "Asia/Bangkok": { lat: 13.7563, lon: 100.5018, name: "バンコク" },
+  "Asia/Kolkata": { lat: 22.5726, lon: 88.3639, name: "コルカタ" },
+  "Asia/Dubai": { lat: 25.2048, lon: 55.2708, name: "ドバイ" },
+  "Europe/London": { lat: 51.5074, lon: -0.1278, name: "ロンドン" },
+  "Europe/Paris": { lat: 48.8566, lon: 2.3522, name: "パリ" },
+  "Europe/Berlin": { lat: 52.52, lon: 13.405, name: "ベルリン" },
+  "Europe/Moscow": { lat: 55.7558, lon: 37.6173, name: "モスクワ" },
+  "America/New_York": { lat: 40.7128, lon: -74.006, name: "ニューヨーク" },
+  "America/Chicago": { lat: 41.8781, lon: -87.6298, name: "シカゴ" },
+  "America/Denver": { lat: 39.7392, lon: -104.9903, name: "デンバー" },
+  "America/Los_Angeles": { lat: 34.0522, lon: -118.2437, name: "ロサンゼルス" },
+  "America/Toronto": { lat: 43.6532, lon: -79.3832, name: "トロント" },
+  "America/Sao_Paulo": { lat: -23.5505, lon: -46.6333, name: "サンパウロ" },
+  "Australia/Sydney": { lat: -33.8688, lon: 151.2093, name: "シドニー" },
+  "Pacific/Auckland": { lat: -36.8485, lon: 174.7633, name: "オークランド" },
+};
+const DEFAULT_WEATHER_LOCATION = TIMEZONE_LOCATIONS["Asia/Tokyo"];
+const WEATHER_REFRESH_MS = 30 * 60 * 1000;
+
+function resolveWeatherLocation() {
+  const lat = Number(latParam);
+  const lon = Number(lonParam);
+  if (
+    latParam !== null &&
+    lonParam !== null &&
+    Number.isFinite(lat) &&
+    Number.isFinite(lon) &&
+    Math.abs(lat) <= 90 &&
+    Math.abs(lon) <= 180
+  ) {
+    return { lat, lon, name: locationNameParam || "" };
+  }
+  return TIMEZONE_LOCATIONS[timezone] || DEFAULT_WEATHER_LOCATION;
+}
+
+// WMO weather code → 天気マークと読み上げ用の天気名
+function weatherIconAndLabel(weatherCode, isDay) {
+  if (weatherCode === 0) return isDay ? ["☀️", "快晴"] : ["🌙", "快晴"];
+  if (weatherCode === 1) return isDay ? ["🌤️", "晴れ"] : ["🌙", "晴れ"];
+  if (weatherCode === 2) return ["⛅", "晴れ時々くもり"];
+  if (weatherCode === 3) return ["☁️", "くもり"];
+  if (weatherCode === 45 || weatherCode === 48) return ["🌫️", "霧"];
+  if (weatherCode >= 51 && weatherCode <= 55) return ["🌦️", "霧雨"];
+  if (weatherCode === 56 || weatherCode === 57) return ["🌨️", "着氷性の霧雨"];
+  if (weatherCode === 61) return ["🌦️", "弱い雨"];
+  if (weatherCode === 63) return ["🌧️", "雨"];
+  if (weatherCode === 65) return ["🌧️", "強い雨"];
+  if (weatherCode === 66 || weatherCode === 67) return ["🌧️", "着氷性の雨"];
+  if (weatherCode === 71) return ["🌨️", "弱い雪"];
+  if (weatherCode === 73) return ["🌨️", "雪"];
+  if (weatherCode === 75) return ["🌨️", "強い雪"];
+  if (weatherCode === 77) return ["🌨️", "霧雪"];
+  if (weatherCode === 80) return ["🌦️", "弱いにわか雨"];
+  if (weatherCode === 81) return ["🌧️", "にわか雨"];
+  if (weatherCode === 82) return ["🌧️", "強いにわか雨"];
+  if (weatherCode === 85 || weatherCode === 86) return ["🌨️", "にわか雪"];
+  if (weatherCode === 95) return ["⛈️", "雷雨"];
+  if (weatherCode === 96 || weatherCode === 99) return ["⛈️", "雹を伴う雷雨"];
+  return ["🌡️", ""];
+}
+
+async function updateWeather() {
+  const { lat, lon, name } = resolveWeatherLocation();
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const apiUrl =
+      "https://api.open-meteo.com/v1/forecast" +
+      `?latitude=${lat}&longitude=${lon}` +
+      "&current=temperature_2m,weather_code,is_day&timezone=auto";
+    const response = await fetch(apiUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!response.ok) return;
+    const data = await response.json();
+    const current = data && data.current;
+    if (!current || typeof current.temperature_2m !== "number") return;
+    const [icon, label] = weatherIconAndLabel(
+      current.weather_code,
+      current.is_day === 1,
+    );
+    const temp = Math.round(current.temperature_2m);
+    weatherIconEl.textContent = icon;
+    weatherTempEl.textContent = `${temp}°`;
+    weatherLocationEl.textContent = name;
+    weatherEl.setAttribute(
+      "aria-label",
+      [name, label, `${temp}度`].filter(Boolean).join(" "),
+    );
+    weatherEl.style.display = "flex";
+  } catch {
+    // 取得できない間は天気欄を出さない（次回更新で再試行、時計表示は継続）
+  }
+}
+
+if (weatherParam !== "off" && weatherParam !== "0") {
+  updateWeather();
+  setInterval(updateWeather, WEATHER_REFRESH_MS);
+}
