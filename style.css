@@ -25,16 +25,15 @@ body {
      各行のフォントサイズは幅だけでなく高さ (vh) でもキャップし、
      天気・サブ時計・カウントダウンが全て表示されても縦に溢れないようにする */
   --stack-gap: clamp(0.75rem, 4vmin, 3rem);
-  --countdown-font-size: clamp(1.5rem, min(6vw, 8vh), 4rem);
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
   padding: var(--stack-gap) clamp(1rem, 4vw, 2rem);
-  /* 下端に固定するカウントダウンの居場所を確保する */
-  padding-bottom: calc(var(--stack-gap) * 2 + var(--countdown-font-size) * 1.6);
   gap: var(--stack-gap);
   text-align: center;
+  /* app.js の fitToViewport が全体を縮小する際の基点（上端中央） */
+  transform-origin: center top;
 }
 
 #clock {
@@ -105,16 +104,10 @@ body {
 }
 
 .countdown {
-  /* フローに置くと画面の高さ次第で押し出されてしまうため、
-     ビューポート下端に固定して常に表示する */
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: var(--stack-gap);
   gap: 0.2em;
   align-items: baseline;
   color: #f5f5f5;
-  font-size: var(--countdown-font-size);
+  font-size: clamp(1.5rem, min(6vw, 8vh), 4rem);
 }
 
 .countdown-icon {
