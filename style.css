@@ -21,8 +21,10 @@ body {
 }
 
 .clock-container {
-  /* 要素間の間隔と上下の余白を同じリズムに揃える（画面の小さい辺に比例） */
-  --stack-gap: clamp(1.25rem, 5vmin, 3rem);
+  /* 要素間の間隔と上下の余白を同じリズムに揃える（画面の小さい辺に比例）。
+     各行のフォントサイズは幅だけでなく高さ (vh) でもキャップし、
+     天気・サブ時計・カウントダウンが全て表示されても縦に溢れないようにする */
+  --stack-gap: clamp(0.75rem, 4vmin, 3rem);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -41,7 +43,7 @@ body {
   font-weight: 300;
   letter-spacing: 0.02em;
   line-height: 1;
-  font-size: clamp(4rem, 25vw, 25rem);
+  font-size: clamp(4rem, min(25vw, 34vh), 25rem);
 }
 
 .secondary-clock,
@@ -56,7 +58,7 @@ body {
 
 .weather {
   gap: 0.3em;
-  font-size: clamp(1.5rem, 6vw, 4rem);
+  font-size: clamp(1.5rem, min(6vw, 8vh), 4rem);
   font-weight: 300;
 }
 
@@ -69,7 +71,7 @@ body {
   gap: 0.25em;
   align-items: baseline;
   color: #b8c4c8;
-  font-size: clamp(1.25rem, 5vw, 3rem);
+  font-size: clamp(1.25rem, min(5vw, 7vh), 3rem);
   font-weight: 300;
 }
 
@@ -85,7 +87,7 @@ body {
 
 .date-label,
 .secondary-date {
-  font-size: clamp(1.125rem, 3.5vw, 2.25rem);
+  font-size: clamp(1.125rem, min(3.5vw, 5vh), 2.25rem);
   font-weight: 300;
 }
 
@@ -94,7 +96,7 @@ body {
   align-items: baseline;
   justify-content: center;
   width: 100%;
-  font-size: clamp(1.25rem, 3.5vw, 2rem);
+  font-size: clamp(1.25rem, min(3.5vw, 5vh), 2rem);
   color: #888;
   font-weight: 400;
 }
@@ -103,7 +105,7 @@ body {
   gap: 0.2em;
   align-items: baseline;
   color: #f5f5f5;
-  font-size: clamp(1.5rem, 6vw, 4rem);
+  font-size: clamp(1.5rem, min(6vw, 8vh), 4rem);
 }
 
 .countdown-icon {
