@@ -297,6 +297,18 @@ const secondaryDateKeyFormatter = secondaryTimezone
     })
   : null;
 
+const containerEl = document.querySelector(".clock-container");
+
+function fitToViewport() {
+  // 一旦スケールを戻してコンテンツの自然な高さを測り、
+  // 画面の高さ（100%）に収まる倍率まで全体を縮小する。収まる場合は等倍。
+  containerEl.style.transform = "";
+  const naturalHeight = containerEl.scrollHeight;
+  if (naturalHeight > window.innerHeight) {
+    containerEl.style.transform = `scale(${window.innerHeight / naturalHeight})`;
+  }
+}
+
 function updateClock() {
   const now = new Date();
   const time = timeFormatter.format(now);
@@ -343,10 +355,13 @@ function updateClock() {
       ? `until ${eventNameParam} (${targetLabel})`
       : `until ${targetLabel}`;
   }
+
+  fitToViewport();
 }
 
 updateClock();
 setInterval(updateClock, 1000);
+window.addEventListener("resize", fitToViewport);
 
 // 天気表示: Open-Meteo（APIキー不要・CORS対応）から現在気温と天気を取得する。
 // 取得地点は天気専用の wloc パラメータで指定し、タイムゾーンとは連動しない。
@@ -505,6 +520,7 @@ async function updateWeather() {
       [name, label, `${temp}度`].filter(Boolean).join(" "),
     );
     weatherEl.style.display = "flex";
+    fitToViewport();
   } catch {
     // 取得できない間は天気欄を出さない（次回更新で再試行、時計表示は継続）
   }
