@@ -15,15 +15,25 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background: #0f0f0f;
   color: #f5f5f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
 }
 
 .clock-container {
+  /* 要素間の間隔と上下の余白を同じリズムに揃える（画面の小さい辺に比例）。
+     各行のフォントサイズは幅だけでなく高さ (vh) でもキャップし、
+     天気・サブ時計・カウントダウンが全て表示されても縦に溢れないようにする */
+  --stack-gap: clamp(0.75rem, 4vmin, 3rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
-  padding: 1.5rem;
+  padding: var(--stack-gap) clamp(1rem, 4vw, 2rem);
+  gap: var(--stack-gap);
   text-align: center;
+  /* app.js の fitToViewport が全体を縮小する際の基点（上端中央） */
+  transform-origin: center top;
 }
 
 #clock {
@@ -34,12 +44,13 @@ body {
   font-variant-numeric: tabular-nums;
   font-weight: 300;
   letter-spacing: 0.02em;
-  line-height: 1.1;
-  font-size: clamp(4rem, 25vw, 25rem);
+  line-height: 1;
+  font-size: clamp(4rem, min(25vw, 34vh), 25rem);
 }
 
 .secondary-clock,
-.countdown {
+.countdown,
+.weather {
   display: none;
   align-items: center;
   justify-content: center;
@@ -47,12 +58,22 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.weather {
+  gap: 0.3em;
+  font-size: clamp(1.5rem, min(6vw, 8vh), 4rem);
+  font-weight: 300;
+}
+
+.weather-location {
+  font-size: 0.4em;
+  color: #888;
+}
+
 .secondary-clock {
-  margin-top: 0.5rem;
   gap: 0.25em;
   align-items: baseline;
   color: #b8c4c8;
-  font-size: clamp(1.25rem, 5vw, 3rem);
+  font-size: clamp(1.25rem, min(5vw, 7vh), 3rem);
   font-weight: 300;
 }
 
@@ -68,7 +89,7 @@ body {
 
 .date-label,
 .secondary-date {
-  font-size: clamp(1.125rem, 3.5vw, 2.25rem);
+  font-size: clamp(1.125rem, min(3.5vw, 5vh), 2.25rem);
   font-weight: 300;
 }
 
@@ -77,18 +98,16 @@ body {
   align-items: baseline;
   justify-content: center;
   width: 100%;
-  margin-bottom: 1rem;
-  font-size: clamp(1.25rem, 3.5vw, 2rem);
+  font-size: clamp(1.25rem, min(3.5vw, 5vh), 2rem);
   color: #888;
   font-weight: 400;
 }
 
 .countdown {
-  margin-top: 1.5rem;
   gap: 0.2em;
   align-items: baseline;
   color: #f5f5f5;
-  font-size: clamp(1.5rem, 6vw, 4rem);
+  font-size: clamp(1.5rem, min(6vw, 8vh), 4rem);
 }
 
 .countdown-icon {
