@@ -99,6 +99,45 @@ function parseUntil(value, timeZone) {
   }
 
   const input = value.trim();
+
+  // 時刻だけ＋オフセット（例: 01:00:00+10:30）は、そのオフセットでの
+  // 次回のその時刻として解釈する（日付付きのISO形式とは別扱い）。
+  const timeWithOffsetMatch = input.match(
+    /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(Z|[+-]\d{2}:?\d{2})$/i,
+  );
+  if (timeWithOffsetMatch) {
+    const hour = Number(timeWithOffsetMatch[1]);
+    const minute = Number(timeWithOffsetMatch[2]);
+    const second = Number(timeWithOffsetMatch[3] || 0);
+    if (hour > 23 || minute > 59 || second > 59) {
+      return null;
+    }
+    const offsetToken = timeWithOffsetMatch[4].toUpperCase();
+    let offsetMinutes = 0;
+    if (offsetToken !== "Z") {
+      const sign = offsetToken.startsWith("-") ? -1 : 1;
+      const digits = offsetToken.slice(1).replace(":", "");
+      offsetMinutes =
+        sign * (Number(digits.slice(0, 2)) * 60 + Number(digits.slice(2, 4)));
+    }
+    const offsetMs = offsetMinutes * 60000;
+    const currentTime = new Date();
+    const shifted = new Date(currentTime.getTime() + offsetMs);
+    let candidateMs =
+      Date.UTC(
+        shifted.getUTCFullYear(),
+        shifted.getUTCMonth(),
+        shifted.getUTCDate(),
+        hour,
+        minute,
+        second,
+      ) - offsetMs;
+    if (candidateMs <= currentTime.getTime()) {
+      candidateMs += 24 * 60 * 60 * 1000;
+    }
+    return new Date(candidateMs);
+  }
+
   const explicitOffset = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(input);
   if (explicitOffset) {
     const parsed = new Date(input);
