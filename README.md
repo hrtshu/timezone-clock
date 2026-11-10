@@ -15,7 +15,7 @@
 | `/?until=2026-12-31T23:59:59+09:00&event=Release` | イベント名付きのタイマー |
 | `/?weather=off` | 天気表示を無効化 |
 | `/?wloc=osaka` | 天気の取得地点をプリセット名で指定（タイムゾーンとは独立） |
-| `/?wloc=恵比寿` | 天気の取得地点を地名で指定（ジオコーディングで座標に解決） |
+| `/?wloc=大阪` | 天気の取得地点を地名で指定（ジオコーディングで座標に解決） |
 | `/?wloc=34.6937,135.5023&loc=大阪` | 天気の取得地点を緯度経度で指定（`loc` は地点名表示） |
 
 無効なタイムゾーンが指定された場合は、ローカルタイムゾーンにフォールバックします。
@@ -39,7 +39,7 @@
 取得地点は天気専用の `wloc` パラメータで指定し、タイムゾーン（`tz`）とは連動しません。
 
 - プリセット名: `tokyo` / `osaka` / `nagoya` / `kyoto` / `sapporo` / `sendai` / `hiroshima` / `fukuoka` / `naha` / `seoul` / `shanghai` / `hongkong` / `taipei` / `singapore` / `bangkok` / `kolkata` / `dubai` / `london` / `paris` / `berlin` / `moscow` / `newyork` / `chicago` / `denver` / `losangeles` / `toronto` / `saopaulo` / `sydney` / `auckland`
-- 地名: `wloc=恵比寿` や `wloc=港区` のように地名をそのまま書くと、[Geocoding API](https://open-meteo.com/en/docs/geocoding-api) で座標に解決します（町名・区レベルの細かさまで指定可能。データベースにない地名は解決できません）
+- 地名: `wloc=大阪` や `wloc=京都` のように地名をそのまま書くと、[Geocoding API](https://open-meteo.com/en/docs/geocoding-api) で座標に解決します（町名・区レベルの細かさまで指定可能。データベースにない地名は解決できません）
 - 緯度経度: `wloc=34.6937,135.5023` の形式。地点名を表示したい場合は `loc` パラメータを併用
 - 未指定・解決できない指定の場合は東京
 
